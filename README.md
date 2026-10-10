@@ -102,7 +102,8 @@ python aws/iam/github_oidc_role_provisioner.py \
   --role-name "github-runner" \
   --repo "my-org/my-repo" \
   --branch "main" \
-  --policy-arn "arn:aws:iam::aws:policy/ReadOnlyAccess"
+  --policy-arn "arn:aws:iam::aws:policy/ReadOnlyAccess" \
+  --apply
 
 # GCP: Plan Workload Identity Federation
 python gcp/iam/github_workload_identity_setup.py \
