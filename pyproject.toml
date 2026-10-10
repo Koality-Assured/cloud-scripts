@@ -1,0 +1,79 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "koality-cloud-scripts"
+version = "0.1.0"
+description = "Multi-cloud security, inventory, cost optimization, and automation scripts for AWS, GCP, Azure, and Prisma Cloud."
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [
+    { name = "Koality Assured", email = "engineering@koalityassured.com" }
+]
+keywords = [
+    "aws",
+    "gcp",
+    "azure",
+    "prisma-cloud",
+    "cloud-security",
+    "cost-optimization",
+    "cloud-engineering",
+    "devops",
+    "finops"
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: System Administrators",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Security",
+    "Topic :: System :: Systems Administration",
+]
+dependencies = [
+    "boto3>=1.34.0",
+    "botocore>=1.34.0",
+    "requests>=2.31.0",
+]
+
+[project.optional-dependencies]
+gcp = [
+    "google-cloud-storage>=2.14.0",
+    "google-cloud-logging>=3.9.0",
+    "google-cloud-billing>=1.13.0",
+    "google-cloud-asset>=3.23.0",
+]
+azure = [
+    "azure-identity>=1.15.0",
+    "azure-mgmt-resource>=23.1.0",
+    "azure-mgmt-storage>=21.1.0",
+    "azure-mgmt-network>=25.3.0",
+    "azure-mgmt-loganalytics>=13.0.0",
+    "azure-mgmt-costmanagement>=4.0.0",
+]
+all = [
+    "koality-cloud-scripts[gcp,azure]",
+]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-mock>=3.12.0",
+    "ruff>=0.3.0",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py39"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B"]
+ignore = ["E501"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
