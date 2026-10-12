@@ -62,7 +62,7 @@ all = [
 dev = [
     "pytest>=9.0.3",
     "pytest-mock==3.14.0",
-    "ruff==0.6.9",
+    "ruff==0.17.0",
 ]
 
 [tool.ruff]
