@@ -86,7 +86,28 @@ def test_github_oidc_role_trust_policy():
     )
     stmt = policy["Statement"][0]
     cond = stmt["Condition"]
-    assert cond["StringLike"]["token.actions.githubusercontent.com:sub"] == "repo:Koality-Assured/cloud-scripts:ref:refs/heads/main"
+    assert cond["StringEquals"]["token.actions.githubusercontent.com:sub"] == "repo:Koality-Assured/cloud-scripts:ref:refs/heads/main"
+
+    policy_tag = github_oidc_role_provisioner.build_trust_policy(
+        oidc_arn=oidc_arn,
+        repo="Koality-Assured/cloud-scripts",
+        tag="v1.0.0"
+    )
+    assert policy_tag["Statement"][0]["Condition"]["StringEquals"]["token.actions.githubusercontent.com:sub"] == "repo:Koality-Assured/cloud-scripts:ref:refs/tags/v1.0.0"
+
+    policy_any = github_oidc_role_provisioner.build_trust_policy(
+        oidc_arn=oidc_arn,
+        repo="Koality-Assured/cloud-scripts",
+        allow_any_ref=True
+    )
+    assert policy_any["Statement"][0]["Condition"]["StringLike"]["token.actions.githubusercontent.com:sub"] == "repo:Koality-Assured/cloud-scripts:*"
+
+    import pytest
+    with pytest.raises(ValueError):
+        github_oidc_role_provisioner.build_trust_policy(oidc_arn, "invalid_repo", branch="main")
+
+    with pytest.raises(ValueError):
+        github_oidc_role_provisioner.build_trust_policy(oidc_arn, "Koality-Assured/cloud-scripts")
 
 
 def test_s3_prefix_scanner_aggregation():

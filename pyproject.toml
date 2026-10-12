@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=61.0"]
+requires = ["setuptools>=83.0.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -7,7 +7,7 @@ name = "koality-cloud-scripts"
 version = "0.1.0"
 description = "Multi-cloud security, inventory, cost optimization, and automation scripts for AWS, GCP, Azure, and Prisma Cloud."
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 license = { text = "MIT" }
 authors = [
     { name = "Koality Assured", email = "engineering@koalityassured.com" }
@@ -29,7 +29,6 @@ classifiers = [
     "Intended Audience :: System Administrators",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -61,14 +60,14 @@ all = [
     "koality-cloud-scripts[gcp,azure]",
 ]
 dev = [
-    "pytest>=8.0.0",
-    "pytest-mock>=3.12.0",
-    "ruff>=0.3.0",
+    "pytest>=9.0.3",
+    "pytest-mock==3.14.0",
+    "ruff==0.6.9",
 ]
 
 [tool.ruff]
 line-length = 100
-target-version = "py39"
+target-version = "py310"
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "B"]
@@ -77,5 +76,6 @@ ignore = ["E501"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
-[tool.setuptools]
-packages = []
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["aws*", "azure*", "gcp*", "prisma*"]

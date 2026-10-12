@@ -25,3 +25,12 @@ def test_gcp_workload_identity_plan():
     assert "attribute.repository/Koality-Assured/cloud-scripts" in plan["principal_set"]
     assert len(plan["gcloud_commands"]) == 3
     assert "google-github-actions/auth@v2" in plan["actions_snippet"]
+
+def test_build_attribute_condition():
+    assert github_workload_identity_setup.build_attribute_condition("repo", branch="main") == "assertion.repository == 'repo' && assertion.ref == 'refs/heads/main'"
+    assert github_workload_identity_setup.build_attribute_condition("repo", environment="prod") == "assertion.repository == 'repo' && assertion.environment == 'prod'"
+    assert github_workload_identity_setup.build_attribute_condition("repo", allow_any_ref=True) == "assertion.repository == 'repo'"
+
+    import pytest
+    with pytest.raises(ValueError):
+        github_workload_identity_setup.build_attribute_condition("repo")
