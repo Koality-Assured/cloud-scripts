@@ -105,16 +105,48 @@ def parse_args(args: Optional[list[str]] = None) -> argparse.Namespace:
     parser.add_argument("--pool-id", default="github-actions-pool", help="Workload Identity Pool ID.")
     parser.add_argument("--provider-id", default="github-provider", help="Workload Identity Provider ID.")
     parser.add_argument("--branch", help="Optional branch restriction (e.g. 'main').")
+    parser.add_argument("--environment", help="Optional environment restriction (e.g. 'production').")
+    parser.add_argument("--tag", help="Optional tag restriction (e.g. 'v1.0.0').")
+    parser.add_argument("--allow-any-ref", action="store_true", help="Escape hatch: allow any ref/environment for this repo (discouraged).")
     parser.add_argument("--format", choices=["text", "json"], default="text", help="Output format.")
     return parser.parse_args(args)
+
+
+def build_attribute_condition(
+    repo: str,
+    branch: Optional[str] = None,
+    environment: Optional[str] = None,
+    tag: Optional[str] = None,
+    allow_any_ref: bool = False,
+) -> Optional[str]:
+    condition = f"assertion.repository == '{repo}'"
+    if environment:
+        condition += f" && assertion.environment == '{environment}'"
+    elif branch:
+        condition += f" && assertion.ref == 'refs/heads/{branch}'"
+    elif tag:
+        condition += f" && assertion.ref == 'refs/tags/{tag}'"
+    elif allow_any_ref:
+        pass
+    else:
+        raise ValueError("Must specify branch, environment, tag, or allow_any_ref")
+    return condition
 
 
 def main() -> int:
     opts = parse_args()
 
-    condition = None
-    if opts.branch:
-        condition = f"assertion.repository == '{opts.repo}' && assertion.ref == 'refs/heads/{opts.branch}'"
+    try:
+        condition = build_attribute_condition(
+            repo=opts.repo,
+            branch=opts.branch,
+            environment=opts.environment,
+            tag=opts.tag,
+            allow_any_ref=opts.allow_any_ref,
+        )
+    except ValueError as e:
+        logger.error(str(e))
+        return 1
 
     plan = generate_configuration_plan(
         project_id=opts.project_id,

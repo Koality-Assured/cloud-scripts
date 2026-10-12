@@ -14,6 +14,7 @@ from __future__ import annotations
 import argparse
 import json
 import logging
+import re
 import sys
 from pathlib import Path
 from typing import Any, Dict, Optional
@@ -72,14 +73,25 @@ def build_trust_policy(
     repo: str,
     branch: Optional[str] = None,
     environment: Optional[str] = None,
+    tag: Optional[str] = None,
+    allow_any_ref: bool = False,
 ) -> Dict[str, Any]:
     """Construct least-privilege assume role trust policy for GitHub Actions."""
+    if not re.match(r"^[^/]+/[^/]+$", repo):
+        raise ValueError("Repo must be in 'owner/name' format (e.g. 'octocat/Hello-World')")
+
     if environment:
         sub_condition = f"repo:{repo}:environment:{environment}"
     elif branch:
         sub_condition = f"repo:{repo}:ref:refs/heads/{branch}"
-    else:
+    elif tag:
+        sub_condition = f"repo:{repo}:ref:refs/tags/{tag}"
+    elif allow_any_ref:
         sub_condition = f"repo:{repo}:*"
+    else:
+        raise ValueError("Must specify --branch, --environment, --tag, or explicitly pass --allow-any-ref to allow all refs.")
+
+    operator = "StringLike" if allow_any_ref or "*" in sub_condition else "StringEquals"
 
     return {
         "Version": "2012-10-17",
@@ -94,7 +106,7 @@ def build_trust_policy(
                     "StringEquals": {
                         f"{GITHUB_OIDC_URL.replace('https://', '')}:aud": GITHUB_AUDIENCE
                     },
-                    "StringLike": {
+                    operator: {
                         f"{GITHUB_OIDC_URL.replace('https://', '')}:sub": sub_condition
                     },
                 },
@@ -108,10 +120,12 @@ def parse_args(args: Optional[list[str]] = None) -> argparse.Namespace:
         description="Provision AWS IAM Role for GitHub Actions OIDC federation."
     )
     parser.add_argument("--role-name", required=True, help="IAM Role Name to create/update.")
-    parser.add_argument("--repo", required=True, help="GitHub repository in 'owner/repo' format (supports wildcards e.g. 'org/*').")
+    parser.add_argument("--repo", required=True, help="GitHub repository in 'owner/name' format.")
     parser.add_argument("--branch", help="Optional specific branch to restrict (e.g. 'main').")
     parser.add_argument("--environment", help="Optional GitHub Environment name to restrict (e.g. 'production').")
-    parser.add_argument("--policy-arn", help="Managed policy ARN to attach (e.g. 'arn:aws:iam::aws:policy/AdministratorAccess').")
+    parser.add_argument("--tag", help="Optional GitHub tag to restrict (e.g. 'v1.0.0').")
+    parser.add_argument("--allow-any-ref", action="store_true", help="Escape hatch: allow any ref/environment for this repo (discouraged).")
+    parser.add_argument("--policy-arn", help="Managed policy ARN to attach (e.g. 'arn:aws:iam::aws:policy/ReadOnlyAccess').")
     parser.add_argument("--policy-file", help="Path to custom JSON IAM policy document to attach inline.")
     parser.add_argument("--session-duration", type=int, default=3600, help="Max session duration in seconds (default: 3600).")
     parser.add_argument("--profile", help="AWS CLI profile name.")
@@ -135,13 +149,30 @@ def main() -> int:
 
     logger.info("Initializing OIDC role provisioning for repo: %s", opts.repo)
 
-    oidc_arn = ensure_oidc_provider(iam, session=session, dry_run=is_dry_run)
-    trust_policy = build_trust_policy(
-        oidc_arn=oidc_arn,
-        repo=opts.repo,
-        branch=opts.branch,
-        environment=opts.environment,
-    )
+    try:
+        trust_policy = build_trust_policy(
+            oidc_arn="arn:aws:iam::123456789012:oidc-provider/token.actions.githubusercontent.com" if is_dry_run else ensure_oidc_provider(iam, session=session, dry_run=False),
+            repo=opts.repo,
+            branch=opts.branch,
+            environment=opts.environment,
+            tag=opts.tag,
+            allow_any_ref=opts.allow_any_ref,
+        )
+    except ValueError as e:
+        logger.error(f"Policy building failed: {e}")
+        return 1
+
+    if not is_dry_run:
+        oidc_arn = ensure_oidc_provider(iam, session=session, dry_run=is_dry_run)
+        trust_policy = build_trust_policy(
+            oidc_arn=oidc_arn,
+            repo=opts.repo,
+            branch=opts.branch,
+            environment=opts.environment,
+            tag=opts.tag,
+            allow_any_ref=opts.allow_any_ref,
+        )
+
     trust_policy_str = json.dumps(trust_policy, indent=2)
 
     print("\n--- Trust Policy ---")
