@@ -41,8 +41,8 @@ jobs:
 
       - name: Run pip-audit
         run: |
-          pip install pip-audit==2.10.1 "filelock>=4.2.1"
-          pip-audit --skip-editable
+          pipx run pip-audit --skip-editable
+
 
   security-scan:
     name: Security Scans
