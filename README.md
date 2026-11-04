@@ -13,7 +13,7 @@
 [![CI](https://github.com/Koality-Assured/cloud-scripts/actions/workflows/ci.yml/badge.svg)](https://github.com/Koality-Assured/cloud-scripts/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](pyproject.toml)
-[![Domain: Cloud-Scripts](https://img.shields.io/badge/domain-cloud-scripts-blueviolet.svg)]()
+[![Domain: Cloud-Scripts](https://img.shields.io/badge/domain-cloud--scripts-blueviolet.svg)](#)
 [![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-yellow.svg)](https://conventionalcommits.org)
 
 </div>

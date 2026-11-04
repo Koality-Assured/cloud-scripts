@@ -28,7 +28,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip setuptools>=83.0.0
+          python -m pip install --upgrade pip "setuptools>=84.1.0"
           pip install -e ".[all,dev]"
 
       - name: Run Ruff Linter
@@ -41,8 +41,8 @@ jobs:
 
       - name: Run pip-audit
         run: |
-          pip install pip-audit==2.10.1
-          pip-audit --skip-editable
+          pipx run pip-audit --skip-editable
+
 
   security-scan:
     name: Security Scans
